@@ -77,11 +77,6 @@ function ClientOnlyProviders() {
     window.addEventListener('offline', handleOffline)
     window.addEventListener('online', handleOnline)
 
-    // FCM - lazy load
-    import('@/lib/firebase/messaging').then(({ initMessaging }) => {
-      initMessaging()
-    }).catch(() => {})
-
     return () => {
       window.removeEventListener('beforeinstallprompt', handler)
       window.removeEventListener('offline', handleOffline)
