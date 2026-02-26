@@ -43,8 +43,8 @@ class NotificationService {
 
       if (error) throw error
 
-      // TODO: Send push notification via FCM when implemented
-      // await this.sendPushNotification(notification)
+      // Disparar Web Push para o usuario (app fechado / tela bloqueada)
+      await this.sendWebPush(notification)
 
       console.log('[v0] Notification sent:', notification.type)
       return { success: true }
@@ -203,6 +203,33 @@ class NotificationService {
       ride_id: rideId,
       priority: 'high',
     })
+  }
+}
+
+  /**
+   * Dispara Web Push para todos os dispositivos ativos do usuario via /api/v1/push/send
+   * Chamado internamente por sendNotification — funciona com app fechado/tela bloqueada
+   */
+  private async sendWebPush(notification: NotificationData) {
+    try {
+      await fetch('/api/v1/push/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: notification.user_id,
+          title:   notification.title,
+          body:    notification.body,
+          data: {
+            type:    notification.type,
+            ride_id: notification.ride_id,
+            ...notification.data,
+          },
+        }),
+      })
+    } catch (err) {
+      // Web Push e best-effort — nao quebra o fluxo principal
+      console.error('[v0] sendWebPush error:', err)
+    }
   }
 }
 

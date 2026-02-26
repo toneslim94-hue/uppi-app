@@ -117,6 +117,65 @@ self.addEventListener('fetch', (event) => {
   }
 })
 
+// ============================================================
+// WEB PUSH (VAPID) — notificacoes mesmo com app fechado
+// ============================================================
+
+// Recebe o push do servidor e exibe a notificacao nativa
+self.addEventListener('push', (event) => {
+  if (!event.data) return
+
+  let payload
+  try {
+    payload = event.data.json()
+  } catch {
+    payload = { title: 'Uppi', body: event.data.text() }
+  }
+
+  const title = payload.title || 'Uppi'
+  const options = {
+    body:     payload.body    || '',
+    icon:     payload.icon    || '/icons/icon-192x192.png',
+    badge:    payload.badge   || '/icons/badge-72x72.png',
+    data:     payload.data    || {},
+    tag:      payload.tag     || 'uppi-push',
+    renotify: true,
+    vibrate:  [200, 100, 200],
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  )
+})
+
+// Ao clicar na notificacao, abre ou foca o app na rota correta
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+
+  const data    = event.notification.data || {}
+  const rideId  = data.ride_id
+  const url     = rideId
+    ? `/uppi/ride/${rideId}`
+    : (data.url || '/uppi/home')
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.focus()
+          client.postMessage({ type: 'NAVIGATE', url })
+          return
+        }
+      }
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(url)
+      }
+    })
+  )
+})
+
+// ============================================================
+
 // Handle messages from the app
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'PREFETCH') {
