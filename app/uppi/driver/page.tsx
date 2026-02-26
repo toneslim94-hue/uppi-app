@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { BottomNavigation } from '@/components/bottom-navigation'
-import DriverSkeleton from '@/components/driver-skeleton' // Import DriverSkeleton component
+import DriverSkeleton from '@/components/driver-skeleton'
 import type { Ride } from '@/lib/types/database'
 import { cn } from '@/lib/utils'
+import { trackingService } from '@/lib/services/tracking-service'
 
 interface RideWithPassenger extends Ride {
   passenger?: {
@@ -232,9 +233,15 @@ export default function DriverPage() {
 
       if (rideError) throw rideError
 
+      // Iniciar tracking GPS em tempo real para o passageiro acompanhar
+      trackingService.startDriverTracking(ride.id, user.id)
+
       // Remove from list
       setRides(prev => prev.filter(r => r.id !== ride.id))
       loadDailyStats(user.id)
+
+      // Navegar para a tela de tracking do motorista
+      router.push(`/uppi/ride/${ride.id}/tracking`)
     } catch (error) {
       console.error('[v0] Error accepting ride:', error)
     } finally {

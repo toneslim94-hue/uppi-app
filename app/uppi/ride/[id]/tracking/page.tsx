@@ -9,6 +9,7 @@ import { iosToast } from '@/lib/utils/ios-toast'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import type { Ride, Profile, DriverProfile } from '@/lib/types/database'
 import { trackingService, type DriverLocation } from '@/lib/services/tracking-service'
+import { notificationService } from '@/lib/services/notification-service'
 import { GoogleMap, type GoogleMapHandle } from '@/components/google-map'
 import { triggerHaptic } from '@/lib/utils/haptics'
 
