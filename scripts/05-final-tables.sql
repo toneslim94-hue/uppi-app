@@ -342,40 +342,7 @@ CREATE POLICY "Anyone can view social stats"
   ON user_social_stats FOR SELECT
   USING (true);
 
--- Tabela: fcm_tokens (Tokens para Push Notifications)
-CREATE TABLE IF NOT EXISTS fcm_tokens (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  token TEXT NOT NULL UNIQUE,
-  device_type TEXT NOT NULL CHECK (device_type IN ('ios', 'android', 'web')),
-  device_id TEXT,
-  is_active BOOLEAN DEFAULT true,
-  last_used_at TIMESTAMPTZ DEFAULT NOW(),
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
 
-CREATE INDEX idx_fcm_tokens_user_id ON fcm_tokens(user_id);
-CREATE INDEX idx_fcm_tokens_token ON fcm_tokens(token);
-CREATE INDEX idx_fcm_tokens_is_active ON fcm_tokens(is_active);
-
--- RLS para fcm_tokens
-ALTER TABLE fcm_tokens ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view own tokens"
-  ON fcm_tokens FOR SELECT
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can register tokens"
-  ON fcm_tokens FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own tokens"
-  ON fcm_tokens FOR UPDATE
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own tokens"
-  ON fcm_tokens FOR DELETE
-  USING (auth.uid() = user_id);
 
 -- =====================================================
 -- TRIGGERS para updated_at
@@ -413,4 +380,4 @@ COMMENT ON TABLE ride_recordings IS 'Gravações de segurança durante as corrid
 COMMENT ON TABLE user_streaks IS 'Sequências de dias ativos dos usuários';
 COMMENT ON TABLE social_follows IS 'Relacionamentos de seguir/seguidor no feed social';
 COMMENT ON TABLE user_social_stats IS 'Estatísticas de engajamento social dos usuários';
-COMMENT ON TABLE fcm_tokens IS 'Tokens FCM para push notifications';
+

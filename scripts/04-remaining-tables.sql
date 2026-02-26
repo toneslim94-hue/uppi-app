@@ -396,30 +396,7 @@ CREATE TRIGGER update_user_social_stats_updated_at
   BEFORE UPDATE ON public.user_social_stats
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- ============================================================
--- FCM TOKENS (Firebase Cloud Messaging)
--- ============================================================
-CREATE TABLE IF NOT EXISTS public.fcm_tokens (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  token TEXT NOT NULL,
-  device_type TEXT,
-  device_id TEXT,
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(user_id, token)
-);
 
-ALTER TABLE public.fcm_tokens ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "fcm_tokens_manage_own" ON public.fcm_tokens
-  FOR ALL USING (auth.uid() = user_id);
-
-DROP TRIGGER IF EXISTS update_fcm_tokens_updated_at ON public.fcm_tokens;
-CREATE TRIGGER update_fcm_tokens_updated_at
-  BEFORE UPDATE ON public.fcm_tokens
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================================
 -- SUCCESS MESSAGE
@@ -429,7 +406,7 @@ BEGIN
   RAISE NOTICE '✅ Tabelas faltantes criadas com sucesso!';
   RAISE NOTICE '📊 Novas tabelas: subscriptions, scheduled_rides, group_rides, group_ride_participants';
   RAISE NOTICE '📊 Novas tabelas: vehicles, driver_documents, user_settings, ride_recordings';
-  RAISE NOTICE '📊 Novas tabelas: user_streaks, social_follows, user_social_stats, fcm_tokens';
+  RAISE NOTICE '📊 Novas tabelas: user_streaks, social_follows, user_social_stats';
   RAISE NOTICE '🔒 RLS habilitado em todas as tabelas';
   RAISE NOTICE '🎯 Achievements populados com 14 conquistas';
 END $$;

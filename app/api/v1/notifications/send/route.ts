@@ -3,15 +3,6 @@ import { createClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
-/**
- * Send push notification via Firebase Admin SDK
- * 
- * This should be called from server-side only (e.g., when ride status changes)
- * In production, you'd use Firebase Admin SDK with service account
- * 
- * For now, this queues notifications in the database
- * You'll need to set up a Cloud Function or Edge Function to actually send them
- */
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
@@ -26,37 +17,29 @@ export async function POST(request: NextRequest) {
 
     if (!user_id || !title || !messageBody) {
       return NextResponse.json(
-        { error: 'Missing required fields: user_id, title, body' },
+        { error: 'Campos obrigatorios ausentes: user_id, title, body' },
         { status: 400 }
       )
     }
 
-    // Queue notification in database
-    const { error: queueError } = await supabase
-      .from('notification_queue')
+    // Salva a notificacao na tabela notifications (Supabase Realtime entrega ao usuario)
+    const { error } = await supabase
+      .from('notifications')
       .insert({
         user_id,
         title,
         body: messageBody,
         data: data || {},
-        status: 'pending'
+        read: false,
       })
 
-    if (queueError) throw queueError
+    if (error) throw error
 
-    // In production, you would:
-    // 1. Get user's FCM token from profiles table
-    // 2. Use Firebase Admin SDK to send notification
-    // 3. Update notification_queue status to 'sent'
-
-    return NextResponse.json({
-      success: true,
-      message: 'Notification queued'
-    })
+    return NextResponse.json({ success: true, message: 'Notificacao enviada' })
   } catch (error) {
     console.error('[v0] Error sending notification:', error)
     return NextResponse.json(
-      { error: 'Failed to send notification' },
+      { error: 'Falha ao enviar notificacao' },
       { status: 500 }
     )
   }
