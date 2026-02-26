@@ -13,7 +13,7 @@ docs/
   INDICE.md                                  <-- Voce esta aqui (mapa completo do projeto)
   AUDITORIA-PROJETO.md                       Auditoria completa: paginas, APIs, componentes, hooks
   CONFIGURACAO-COMPLETA.md                   Env vars, integrações, proximos passos
-  FIREBASE-SETUP.md                          Setup Firebase FCM para push notifications
+  VAPID-SETUP.md                             Setup Web Push (VAPID) para push notifications
 
   01-frontend/
     IMPLEMENTACAO.md                         Funcionalidades, componentes React, UX
@@ -335,7 +335,7 @@ package.json                                 Dependencias completas
 | shadcn/ui            | 76 componentes UI (52 base + 22 ios + extras)  | latest    |
 | Supabase             | Auth + PostgreSQL + Realtime + Storage     | 2.47.x    |
 | Google Maps          | Mapas, rotas, geocoding, places            | latest    |
-| Firebase FCM         | Push notifications                         | 10.x      |
+| Web Push (VAPID)     | Push notifications (sem Firebase)          | web-push 3.x |
 | Framer Motion        | Animacoes                                  | 11.x      |
 | Recharts             | Graficos                                   | 2.15.0    |
 | Sonner               | Notificacoes toast                         | 1.7.1     |

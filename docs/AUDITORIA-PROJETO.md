@@ -17,7 +17,7 @@
 | **Componentes** | 100% | 48 custom + 85 ui (54 shadcn + 31 iOS) = 133 total |
 | **Services** | 100% | 13 services de dominio |
 | **Hooks** | 100% | 12 hooks customizados |
-| **Integracoes** | 100% | Supabase + Google Maps + Firebase FCM |
+| **Integracoes** | 100% | Supabase + Google Maps + Web Push VAPID |
 | **Documentacao** | 100% | 15 docs em docs/ |
 | **Deploy** | Pendente | Pronto para deploy Vercel |
 
@@ -219,7 +219,7 @@ ios-action-sheet, ios-alert-dialog, ios-avatar, ios-back-button, ios-badge, ios-
 | Hook | Funcao |
 |------|--------|
 | use-auth.ts | Sessao Supabase e perfil do usuario |
-| use-fcm.ts | Firebase Cloud Messaging (push notifications) |
+| use-push-notifications.ts | Web Push VAPID — subscribe/unsubscribe nativo |
 | use-geolocation.ts | Geolocalizacao do dispositivo |
 | use-google-maps.ts | Localizacao + Google Maps loader |
 | use-haptic.ts | Feedback haptico (vibrate API, 7 padroes) |
@@ -259,7 +259,7 @@ ios-action-sheet, ios-alert-dialog, ios-avatar, ios-back-button, ios-badge, ios-
 |-----------|---------|
 | supabase/ | client.ts, server.ts, proxy.ts, middleware.ts, admin.ts, config.ts, database.ts, types.ts (8) |
 | services/ | 13 arquivos (ver acima) |
-| firebase/ | config.ts, auth.ts, messaging.ts, firestore.ts, admin.ts (5) |
+| push/ | use-push-notifications.ts, sw.js — Web Push VAPID sem Firebase (2) |
 | google-maps/ | provider.tsx, utils.ts, types.ts, route-optimizer.ts (4) |
 | utils/ | ai-suggestions.ts, analytics.ts, deep-links.ts, fetch-retry.ts, haptics.ts, init-app.ts, ios-animations.ts, ios-haptics.ts, ios-toast.ts, offline-handler.ts, rate-limit.ts, ride-calculator.ts (12) |
 | api/ | config.ts, version-middleware.ts (2) |
@@ -281,7 +281,7 @@ ios-action-sheet, ios-alert-dialog, ios-avatar, ios-back-button, ios-badge, ios-
 | Radix UI | Primitivos acessiveis | latest |
 | Supabase | Auth + PostgreSQL + Realtime + Storage | 2.47.x |
 | Google Maps JS API | Mapas, rotas, geocoding, places | latest |
-| Firebase FCM | Push notifications | 10.x |
+| web-push (VAPID) | Push notifications nativo sem Firebase | 3.x |
 | Framer Motion | Animacoes | 11.x |
 | Recharts | Graficos (admin dashboard) | 2.15.0 |
 | Sonner | Toast notifications | 1.7.1 |
