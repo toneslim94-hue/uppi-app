@@ -9,6 +9,7 @@ import {
   Car,
   DollarSign,
   Radio,
+  Bell,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -23,6 +24,7 @@ const navItems = [
   { href: '/admin/rides', icon: Car, label: 'Corridas' },
   { href: '/admin/financeiro', icon: DollarSign, label: 'Financeiro' },
   { href: '/admin/monitor', icon: Radio, label: 'Monitor Realtime' },
+  { href: '/admin/notifications', icon: Bell, label: 'Notificações' },
 ]
 
 export function AdminSidebar() {
