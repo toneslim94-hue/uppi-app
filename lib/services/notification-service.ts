@@ -1,9 +1,9 @@
 import { createClient } from '@/lib/supabase/client'
 
-export type NotificationType = 
-  | 'new_offer' 
-  | 'offer_accepted' 
-  | 'ride_started' 
+export type NotificationType =
+  | 'new_offer'
+  | 'offer_accepted'
+  | 'ride_started'
   | 'ride_completed'
   | 'driver_arriving'
   | 'driver_arrived'
@@ -14,7 +14,7 @@ export interface NotificationData {
   type: NotificationType
   title: string
   body: string
-  data?: Record<string, any>
+  data?: Record<string, unknown>
   ride_id?: string
   user_id: string
   priority?: 'high' | 'normal'
@@ -22,43 +22,41 @@ export interface NotificationData {
 
 class NotificationService {
   private supabase = createClient()
-  
+
   /**
-   * Send notification to user
+   * Envia notificacao: salva no banco + dispara Web Push (app fechado/tela bloqueada)
    */
   async sendNotification(notification: NotificationData): Promise<{ success: boolean; error?: string }> {
     try {
-      // Store notification in database
       const { error } = await this.supabase
         .from('notifications')
         .insert({
-          user_id: notification.user_id,
-          title: notification.title,
-          body: notification.body,
-          type: notification.type,
-          data: notification.data || {},
-          ride_id: notification.ride_id,
-          read: false,
+          user_id:  notification.user_id,
+          title:    notification.title,
+          body:     notification.body,
+          type:     notification.type,
+          data:     notification.data || {},
+          ride_id:  notification.ride_id,
+          read:     false,
         })
 
       if (error) throw error
 
-      // Disparar Web Push para o usuario (app fechado / tela bloqueada)
+      // Dispara Web Push — best effort, nao quebra o fluxo
       await this.sendWebPush(notification)
 
-      console.log('[v0] Notification sent:', notification.type)
       return { success: true }
     } catch (error) {
-      console.error('[v0] Error sending notification:', error)
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      console.error('[NotificationService] sendNotification error:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
       }
     }
   }
 
   /**
-   * Get user notifications
+   * Busca notificacoes do usuario
    */
   async getUserNotifications(userId: string, limit = 20) {
     try {
@@ -72,13 +70,13 @@ class NotificationService {
       if (error) throw error
       return { success: true, notifications: data }
     } catch (error) {
-      console.error('[v0] Error fetching notifications:', error)
+      console.error('[NotificationService] getUserNotifications error:', error)
       return { success: false, error: 'Failed to load notifications' }
     }
   }
 
   /**
-   * Mark notification as read
+   * Marca uma notificacao como lida
    */
   async markAsRead(notificationId: string) {
     try {
@@ -90,13 +88,13 @@ class NotificationService {
       if (error) throw error
       return { success: true }
     } catch (error) {
-      console.error('[v0] Error marking notification as read:', error)
+      console.error('[NotificationService] markAsRead error:', error)
       return { success: false }
     }
   }
 
   /**
-   * Mark all notifications as read
+   * Marca todas as notificacoes do usuario como lidas
    */
   async markAllAsRead(userId: string) {
     try {
@@ -109,18 +107,15 @@ class NotificationService {
       if (error) throw error
       return { success: true }
     } catch (error) {
-      console.error('[v0] Error marking all as read:', error)
+      console.error('[NotificationService] markAllAsRead error:', error)
       return { success: false }
     }
   }
 
   /**
-   * Subscribe to real-time notifications
+   * Subscribe Supabase Realtime para notificacoes em tempo real (app aberto)
    */
-  subscribeToNotifications(
-    userId: string,
-    callback: (notification: any) => void
-  ): () => void {
+  subscribeToNotifications(userId: string, callback: (notification: unknown) => void): () => void {
     const channel = this.supabase
       .channel(`notifications:${userId}`)
       .on(
@@ -131,20 +126,15 @@ class NotificationService {
           table: 'notifications',
           filter: `user_id=eq.${userId}`,
         },
-        (payload) => {
-          console.log('[v0] New notification received:', payload.new)
-          callback(payload.new)
-        }
+        (payload) => callback(payload.new)
       )
       .subscribe()
 
-    return () => {
-      this.supabase.removeChannel(channel)
-    }
+    return () => { this.supabase.removeChannel(channel) }
   }
 
   /**
-   * Get unread count
+   * Retorna contagem de notificacoes nao lidas
    */
   async getUnreadCount(userId: string) {
     try {
@@ -157,63 +147,57 @@ class NotificationService {
       if (error) throw error
       return { success: true, count: count || 0 }
     } catch (error) {
-      console.error('[v0] Error getting unread count:', error)
+      console.error('[NotificationService] getUnreadCount error:', error)
       return { success: false, count: 0 }
     }
   }
 
   /**
-   * Helper: Send ride status notification
+   * Atalho para notificar mudancas de status da corrida
    */
-  async notifyRideStatus(
-    userId: string, 
-    rideId: string, 
-    status: string,
-    driverName?: string
-  ) {
-    const notifications: Record<string, { title: string; body: string; type: NotificationType }> = {
-      'driver_arriving': {
+  async notifyRideStatus(userId: string, rideId: string, status: string, driverName?: string) {
+    const map: Record<string, { title: string; body: string; type: NotificationType }> = {
+      driver_arriving: {
         title: 'Motorista a caminho',
-        body: `${driverName || 'Seu motorista'} está indo até você`,
-        type: 'driver_arriving',
+        body:  `${driverName || 'Seu motorista'} esta indo ate voce`,
+        type:  'driver_arriving',
       },
-      'arrived': {
+      arrived: {
         title: 'Motorista chegou!',
-        body: `${driverName || 'Seu motorista'} está te esperando`,
-        type: 'driver_arrived',
+        body:  `${driverName || 'Seu motorista'} esta te esperando`,
+        type:  'driver_arrived',
       },
-      'in_progress': {
+      in_progress: {
         title: 'Corrida iniciada',
-        body: 'Sua corrida começou. Boa viagem!',
-        type: 'ride_started',
+        body:  'Sua corrida comecou. Boa viagem!',
+        type:  'ride_started',
       },
-      'completed': {
+      completed: {
         title: 'Corrida finalizada',
-        body: 'Avalie sua experiência',
-        type: 'ride_completed',
+        body:  'Avalie sua experiencia',
+        type:  'ride_completed',
       },
     }
 
-    const notification = notifications[status]
+    const notification = map[status]
     if (!notification) return
 
     return this.sendNotification({
       ...notification,
-      user_id: userId,
-      ride_id: rideId,
+      user_id:  userId,
+      ride_id:  rideId,
       priority: 'high',
     })
   }
-}
 
   /**
-   * Dispara Web Push para todos os dispositivos ativos do usuario via /api/v1/push/send
-   * Chamado internamente por sendNotification — funciona com app fechado/tela bloqueada
+   * Chama a rota server-side /api/v1/push/send para entregar o Web Push
+   * ao(s) dispositivo(s) do usuario — funciona com app fechado / tela bloqueada
    */
   private async sendWebPush(notification: NotificationData) {
     try {
       await fetch('/api/v1/push/send', {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_id: notification.user_id,
@@ -222,13 +206,12 @@ class NotificationService {
           data: {
             type:    notification.type,
             ride_id: notification.ride_id,
-            ...notification.data,
+            ...(notification.data ?? {}),
           },
         }),
       })
     } catch (err) {
-      // Web Push e best-effort — nao quebra o fluxo principal
-      console.error('[v0] sendWebPush error:', err)
+      console.error('[NotificationService] sendWebPush error:', err)
     }
   }
 }

@@ -4,6 +4,7 @@ import { type ReactNode, useEffect, useState } from 'react'
 import { ThemeProvider } from 'next-themes'
 import { Toaster } from 'sonner'
 import { GoogleMapsProvider } from '@/lib/google-maps/provider'
+import { usePushNotifications } from '@/hooks/use-push-notifications'
 
 // Lazy-loaded providers that are not needed during SSR prerendering
 function LazyProviders({ children }: { children: ReactNode }) {
@@ -39,8 +40,25 @@ function LazyProviders({ children }: { children: ReactNode }) {
         }}
       />
       <ClientOnlyProviders />
+      <PushNotificationsBootstrap />
     </ThemeProvider>
   )
+}
+
+// Solicita permissao de push assim que o usuario esta autenticado
+function PushNotificationsBootstrap() {
+  const { permission, isSubscribed, subscribe } = usePushNotifications()
+
+  useEffect(() => {
+    // So pede se ainda nao foi decidido e nao esta subscrito
+    if (permission === 'default' && !isSubscribed) {
+      // Aguarda 3s para nao bloquear a renderizacao inicial
+      const timer = setTimeout(() => { subscribe() }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [permission, isSubscribed, subscribe])
+
+  return null
 }
 
 // These providers return null and only run effects on the client
